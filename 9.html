@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		body{
+			/*background:rgba();*/
+		}
+		#scream{
+			display: none;
+		}
+		#canvas{
+			position: absolute;
+			top:0;
+			left: 0;
+			border: 1px solid red;
+			background: black;
+			width: 100%;
+			height: 100%;
+		}
+		#add{
+			position: absolute;
+			top:10px;
+			z-index:99;
+		}
+		#up{
+			position: absolute;
+			z-index:99;
+			top:50px;
+		}
+		#c{
+			position: absolute;
+			z-index: 99;
+			top:100px;
+		}
+	</style>
+</head>
+<body>
+<canvas id= "canvas"></canvas>
+<button id='add'>add</button>
+<button id='up'>up</button>
+<input id ='c' type="range" value='0'>
+<img id='scream' src="./fire.png">
+<!-- https://s3-us-west-2.amazonaws.com/s.cdpn.io/95637/Smoke-Element.png -->
+<!-- http://creativeocean.com/dev/_images/flame3.png -->
+<script type="text/javascript">
+
+var c=document.getElementById("canvas");
+var ctx=c.getContext("2d");
+var img=document.getElementById("scream");
+
+
+(function () {
+  var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+  window.requestAnimationFrame = requestAnimationFrame;
+})();
+
+
+var smoke = function (x,y,top){
+	var par= top;
+
+	this.x=x+(Math.random()*par*5);
+	this.y=y;
+
+	this.vx=(.5-Math.random()*2);
+	this.vy =(-1-Math.random());
+
+	this.size =7;
+	this.top = par;//10 0.02   5 0.025    1 0.06
+	this.globalAlpha=1;
+
+	this.angle = Math.random() * 360;
+	this.translate = Math.random()*360;
+}
+smoke.prototype= {
+	updata: function () {
+
+		this.x = this.x+this.vx;
+		this.y = this.y+this.vy;
+		this.size = this.size+0.5;
+
+		if(this.top >=5){
+		 var cha= this.top -5;
+			this.globalAlpha = this.globalAlpha - ( 0.02 - cha*0.004/2);
+		}
+		else{
+			var cha = this.top - 6;
+			this.globalAlpha = this.globalAlpha - (0.02 - cha*0.01);
+		}
+		if(this.globalAlpha <0){
+			this.globalAlpha = 0;
+		}
+
+		this.angle = this.translate++;
+	},
+	draw: function () {
+		// console.log(this.globalAlpha);
+		ctx.save();
+		ctx.globalAlpha = this.globalAlpha;
+		// ctx.translate(10, 10);
+		// ctx.rotate(3 / 180 * Math.PI);
+		// 
+		ctx.translate((this.x+(this.size/2)),(this.y+(this.size/2)));
+		ctx.rotate(this.angle*Math.PI/180);	
+		ctx.translate(-(this.x+(this.size/2)),-(this.y+(this.size/2)));
+
+
+		ctx.drawImage(img,this.x,this.y,this.size,this.size);
+		ctx.restore();
+	}
+}
+
+
+var control = function (x,y) {
+	this.path = [];
+	this.num = 5;
+	this.x=x;
+	this.y=y;
+	this.top = 5;//1到 10
+}
+control.prototype = {
+	start: function ()　{
+		this.path.forEach (function(smoke){
+			smoke.updata();
+			smoke.draw();
+		});
+		this.add();
+		this.remove();
+	},
+	up: function () {
+		if(this.top ===10){
+			return;
+		}
+			this.top++;
+			this._change();
+	},
+	down: function () {
+		if(this.top ===1){
+			return;
+		}
+		this.top--;
+		this._change();
+	},
+	add: function () {
+		for(var i=0; i<this.num; i++){
+			this.path.push(new smoke(this.x,this.y,this.top));
+		}
+		
+	},
+	remove: function () {
+		var arr = this.path;
+		arr.forEach (function(smoke ,index) {
+			if(smoke.globalAlpha === 0) {
+				arr.splice(index,1);
+			}
+		})
+	},
+	_change: function () {
+		var cha = this.top;
+		if(cha===1||cha===2){
+			this.num = 3;
+		}
+		if(cha===3||cha===4){
+			this.num = 4;
+		}
+		if(cha===5||cha===6){
+			this.num = 5;
+		}
+		if(cha===7||cha===8){
+			this.num = 6;
+		}
+		if(cha===9||cha===10){
+			this.num = 7;
+		}
+	}
+}
+
+
+var newControl = new control(100,120); 
+var i = 0;
+function go () {
+	// i++;
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	newControl.start();
+	// if(i<1000){
+		setTimeout(go, 1000/60);
+	// }
+	
+}
+
+img.onload = function () {
+	go();
+}
+
+
+
+var oadd =document.getElementById('add');
+add.addEventListener('click',function() {
+	newControl.up();
+})
+var oup =document.getElementById('up');
+up.addEventListener('click',function() {
+	newControl.down();
+})
+
+</script>
+</body>
+</html> 
